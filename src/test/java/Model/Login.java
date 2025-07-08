@@ -21,10 +21,12 @@ public class Login extends BaseTest {
                 .spec(spec)
                 .contentType(ContentType.JSON)
                 .body(body)
+                .log().all()
                 .when()
                 .post("/auth/login")
                 .then()
-                .statusCode(400); // Postman'da 400 bekleniyordu
+                .log().all()
+                .statusCode(400);
     }
 
     @Test
@@ -34,13 +36,13 @@ public class Login extends BaseTest {
         body.put("password", "TS.%=2025TR");
 
         given()
-                .spec(spec)
+                .baseUri("https://test.mersys.io")
                 .contentType(ContentType.JSON)
                 .body(body)
                 .when()
                 .post("/auth/login")
                 .then()
                 .statusCode(200)
-                .body("username", equalTo("turkeyts")); // örnek, response JSON’da varsa
+                .body("username", equalTo("turkeyts"));
     }
 }

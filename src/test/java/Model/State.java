@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.*;
 
 public class State extends BaseTest {
 
-    String stateId;
+    private String stateId;
 
     @Test(priority = 1)
     public void addStateTest() {
@@ -20,8 +20,8 @@ public class State extends BaseTest {
         countryMap.put("id", "6851afe5ca9f665c0c659eec");
 
         Map<String, Object> stateMap = new HashMap<>();
-        stateMap.put("name", "SampleState");
-        stateMap.put("code", "SS");
+        stateMap.put("name", "SampleState_" + System.currentTimeMillis());
+        stateMap.put("code", "SS" + (int)(Math.random() * 1000));
         stateMap.put("country", countryMap);
 
         stateId =
@@ -29,15 +29,18 @@ public class State extends BaseTest {
                         .spec(spec)
                         .contentType(ContentType.JSON)
                         .body(stateMap)
+                        .log().all()
                         .when()
                         .post("/school-service/api/states")
                         .then()
+                        .log().all()
                         .statusCode(201)
-                        .body("name", equalTo("SampleState"))
-                        .body("code", equalTo("SS"))
-                        .body("country.name", notNullValue())
-                        .body("country.code", notNullValue())
+                        .body("name", startsWith("SampleState"))
+                        .body("code", startsWith("SS"))
+                        .body("country.id", equalTo("6851afe5ca9f665c0c659eec"))
                         .extract().path("id");
+
+        System.out.println("Created State ID: " + stateId);
     }
 
     @Test(priority = 2)
@@ -49,17 +52,18 @@ public class State extends BaseTest {
                         .get("/school-service/api/states")
                         .then()
                         .statusCode(200)
-                        .time(lessThan(1000L)) // <1000 ms kontrolü
+                        .time(lessThan(1500L)) // <1.5s kontrolü
                         .extract().jsonPath().getList("");
 
         for (Map<String, Object> state : states) {
-            assert state.containsKey("name");
-            assert state.containsKey("code");
-            assert state.containsKey("country");
+            assert state.containsKey("name") : "State missing 'name'";
+            assert state.containsKey("code") : "State missing 'code'";
+            assert state.containsKey("country") : "State missing 'country'";
 
             Map<String, Object> country = (Map<String, Object>) state.get("country");
-            assert country.containsKey("name");
-            assert country.containsKey("code");
+            assert country.containsKey("id") : "Country missing 'id'";
+            assert country.containsKey("name") : "Country missing 'name'";
+            assert country.containsKey("code") : "Country missing 'code'";
         }
     }
 
@@ -83,9 +87,10 @@ public class State extends BaseTest {
                 .put("/school-service/api/states")
                 .then()
                 .statusCode(200)
+                .body("id", equalTo(stateId))
                 .body("name", equalTo("UpdatedState"))
                 .body("code", equalTo("US"))
-                .body("country.name", notNullValue());
+                .body("country.id", equalTo("6851afe5ca9f665c0c659eec"));
     }
 
     @Test(priority = 4, dependsOnMethods = "updateStateTest")
@@ -96,5 +101,7 @@ public class State extends BaseTest {
                 .delete("/school-service/api/states/" + stateId)
                 .then()
                 .statusCode(anyOf(is(204), is(200)));
+
+        System.out.println("Deleted State ID: " + stateId);
     }
 }

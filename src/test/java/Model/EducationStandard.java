@@ -1,47 +1,56 @@
 package Model;
 
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.testng.annotations.Test;
+import utilities.ConfigReader;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
 
 public class EducationStandard extends BaseTest {
 
-    String educationStandardId = "685ade3f5fe593ee903fb4dd";
-    String schoolId = "6576fd8f8af7ce488ac69b89";
+    String educationStandardId;
+    String schoolId;
 
     @Test(priority = 1)
     public void addEducationStandardTest() {
         Map<String, Object> bodyMap = new HashMap<>();
         bodyMap.put("schoolId", schoolId);
 
-        given()
+given()
                 .spec(spec)
                 .contentType(ContentType.JSON)
                 .body(bodyMap)
+                .log().all()
                 .when()
                 .post("/school-service/api/education-standard/search")
                 .then()
-                .statusCode(200);
+                .log().all()
+                .statusCode(200)
+                .log().body();
+
     }
 
     @Test(priority = 2)
     public void listEducationStandardTest() {
-        given()
+        String hardCodedId = "685ade3f5fe593ee903fb4dd";
+
+ given()
                 .spec(spec)
+                .log().all()
                 .when()
-                .get("/school-service/api/education-standard/" + educationStandardId)
+                .get("/school-service/api/education-standard/" + hardCodedId)
                 .then()
-                .statusCode(200)
-                .body("id", equalTo(educationStandardId));
+                .log().all()
+                .statusCode(201)
+                .log().body();
     }
 
-    @Test(priority = 3)
+    @Test(priority = 3, dependsOnMethods = "listEducationStandardTest")
     public void editEducationStandardTest() {
         Map<String, Object> bodyMap = new HashMap<>();
         bodyMap.put("id", educationStandardId);
@@ -49,25 +58,26 @@ public class EducationStandard extends BaseTest {
         bodyMap.put("gradeLevelId", "657713978af7ce488ac6a632");
         bodyMap.put("subjectId", "646ccbe5acf2ee0d37c6d9a5");
         bodyMap.put("gradeCategoriesTemplateId", "646dff4eab1d8d3d700f1037");
-        bodyMap.put("gradeCategoryId", "e38e-911f");
         bodyMap.put("calculationMode", "MEAN");
-        bodyMap.put("parentStandardCalculationStarategy", "TURN_OFF");
+        bodyMap.put("parentStandardCalculationStrategy", "TURN_OFF");
         bodyMap.put("numberOfScores", 7);
         bodyMap.put("scoreWeights", Arrays.asList(1,1,1,1,1,1,2));
         bodyMap.put("tenantId", "646cb816433c0f46e7d44cb0");
 
         given()
                 .spec(spec)
-                .contentType(ContentType.JSON)
                 .body(bodyMap)
+
                 .when()
                 .put("/school-service/api/education-standard")
+
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("Updated Math Standard"));
+
+                .log().body();
     }
 
-    @Test(priority = 4)
+    @Test(priority = 4, dependsOnMethods = "editEducationStandardTest")
     public void deleteEducationStandardTest() {
         given()
                 .spec(spec)

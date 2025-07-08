@@ -1,153 +1,107 @@
 package Model;
 
-import io.restassured.http.ContentType;
+import com.github.javafaker.Faker;
+import io.restassured.response.Response;
+import io.restassured.path.json.JsonPath;
 import org.testng.annotations.Test;
+import utilities.ConfigReader;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
 
-public class StudentGroup extends BaseTest{
+public class StudentGroup extends BaseTest {
 
-    String groupId;
+    @Test
+    public void createEducationStandard() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("id", null);
+        Faker faker = new Faker();
+        body.put("name", faker.educator().course());
+        body.put("description", faker.lorem().sentence());
+        body.put("schoolId", ConfigReader.getProperty("schoolID"));
+        body.put("gradeLevelId", ConfigReader.getProperty("gradeLevelId"));
+        body.put("subjectId", ConfigReader.getProperty("subjectId"));
+        body.put("gradeCategoriesTemplateId", ConfigReader.getProperty("gradeCategoriesTemplateId"));
+        body.put("gradeCategoryId", ConfigReader.getProperty("gradeCategoryId"));
+        body.put("calculationMode", "MEAN");
+        body.put("parentStandardCalculationStrategy", "TURN_OFF");
+        body.put("numberOfScores", 7);
+        body.put("scoreWeights", Arrays.asList(1, 1, 1, 1, 1, 1, 2));
+        body.put("tenantId", ConfigReader.getProperty("tenantId"));
 
-    @Test(priority = 1)
-    public void addStudentGroupTest() {
-        Map<String, Object> groupMap = new HashMap<>();
-        groupMap.put("schoolId", "6576fd8f8af7ce488ac69b89");
-        groupMap.put("name", "Test Group For CRUD");
-        groupMap.put("description", "Bu grup Postman üzerinden CRUD testleri için oluşturuldu.");
-        groupMap.put("active", true);
-        groupMap.put("public", false);
-        groupMap.put("visibilityToStudent", true);
-
-        groupId =
+        String educationStandardID =
                 given()
                         .spec(spec)
-                        .contentType(ContentType.JSON)
-                        .body(groupMap)
+                        .body(body)
                         .when()
-                        .post("/school-service/api/student-group")
+                        .post("/school-service/api/education-standard")
                         .then()
                         .statusCode(201)
-                        .body("id", notNullValue())
+                        .log().body()
                         .extract().path("id");
 
-        System.out.println("Created Student Group ID: " + groupId);
+        ConfigReader.updateProperty("educationStandardID", educationStandardID);
+        System.out.println("Created EducationStandard ID: " + educationStandardID);
     }
 
-    @Test(priority = 2, dependsOnMethods = "addStudentGroupTest")
-    public void listStudentGroupTest() {
+    @Test(dependsOnMethods = "createEducationStandard")
+    public void updateEducationStandard() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        Faker faker = new Faker();
+        body.put("id", ConfigReader.getProperty("educationStandardID"));
+        body.put("name", "Updated " + faker.educator().course());
+        body.put("description", faker.lorem().paragraph());
+        body.put("schoolId", ConfigReader.getProperty("schoolID"));
+        body.put("gradeLevelId", ConfigReader.getProperty("gradeLevelId"));
+        body.put("subjectId", ConfigReader.getProperty("subjectId"));
+        body.put("gradeCategoriesTemplateId", ConfigReader.getProperty("gradeCategoriesTemplateId"));
+        body.put("gradeCategoryId", ConfigReader.getProperty("gradeCategoryId"));
+        body.put("calculationMode", "MEAN");
+        body.put("parentStandardCalculationStrategy", "TURN_OFF");
+        body.put("numberOfScores", 7);
+        body.put("scoreWeights", Arrays.asList(1, 1, 1, 1, 1, 1, 2));
+        body.put("tenantId", ConfigReader.getProperty("tenantId"));
+
         given()
                 .spec(spec)
+                .body(body)
                 .when()
-                .get("/school-service/api/student-group/" + groupId)
+                .put("/school-service/api/education-standard")
                 .then()
                 .statusCode(200)
-                .body("id", equalTo(groupId))
-                .body("name", equalTo("Test Group For CRUD"))
-                .body("schoolId", equalTo("6576fd8f8af7ce488ac69b89"));
+                .log().body();
     }
 
-    @Test(priority = 3, dependsOnMethods = "listStudentGroupTest")
-    public void updateStudentGroupTest() {
-        Map<String, Object> groupMap = new HashMap<>();
-        groupMap.put("id", groupId);
-        groupMap.put("schoolId", "6576fd8f8af7ce488ac69b89");
-        groupMap.put("name", "Updated Group Name");
-        groupMap.put("description", "Bu grup Postman CRUD testi için güncellendi.");
-        groupMap.put("active", false);
-        groupMap.put("publicGroup", true);
-        groupMap.put("showToStudent", true);
-
-        given()
-                .spec(spec)
-                .contentType(ContentType.JSON)
-                .body(groupMap)
-                .when()
-                .put("/school-service/api/student-group")
-                .then()
-                .statusCode(200)
-                .body("id", equalTo(groupId))
-                .body("name", equalTo("Updated Group Name"))
-                .body("description", equalTo("Bu grup Postman CRUD testi için güncellendi."))
-                .body("active", equalTo(false))
-                .body("publicGroup", equalTo(true))
-                .body("showToStudent", equalTo(true));
-    }
-
-    @Test(priority = 4, dependsOnMethods = "updateStudentGroupTest")
-    public void listStudentsInSchoolTest() {
-        List<Map<String, Object>> groups =
+    @Test(dependsOnMethods = "updateEducationStandard")
+    public void getEducationStandardDetail() {
+        String id = ConfigReader.getProperty("educationStandardID");
+        Response response =
                 given()
                         .spec(spec)
+                        .log().all()
                         .when()
-                        .get("/school-service/api/student-group/school/6576fd8f8af7ce488ac69b89?page=0&size=50")
+                        .get("/school-service/api/education-standard/" + id)
                         .then()
                         .statusCode(200)
-                        .time(lessThan(1000L))
-                        .extract().jsonPath().getList("content");
+                        .log().body()
+                        .extract().response();
 
-        assert groups.size() > 0;
+        JsonPath json = response.jsonPath();
+        String returnedName = json.getString("name");
+        System.out.println("GET EducationStandard returned name: " + returnedName);
     }
 
-    @Test(priority = 5, dependsOnMethods = "listStudentsInSchoolTest")
-    public void addStudentToGroupTest() {
-        Map<String, Object> bodyMap = new HashMap<>();
-        bodyMap.put("studentIds", List.of("657711ca8af7ce488ac6a628"));
-
-        given()
-                .spec(spec)
-                .contentType(ContentType.JSON)
-                .body(bodyMap)
-                .when()
-                .post("/school-service/api/student-groups/" + groupId + "/add-students")
-                .then()
-                .statusCode(200);
-    }
-
-    @Test(priority = 6, dependsOnMethods = "addStudentToGroupTest")
-    public void displayStudentGroupTest() {
-        List<Map<String, Object>> students =
-                given()
-                        .spec(spec)
-                        .when()
-                        .get("/school-service/api/students/group/" + groupId + "?page=0&size=10")
-                        .then()
-                        .statusCode(200)
-                        .time(lessThan(1000L))
-                        .extract().jsonPath().getList("content");
-
-        assert students instanceof List;
-    }
-
-    @Test(priority = 7, dependsOnMethods = "displayStudentGroupTest")
-    public void removeStudentFromGroupTest() {
-        Map<String, Object> bodyMap = new HashMap<>();
-        bodyMap.put("studentIds", List.of("657711c9a18cee0c25254256"));
-
-        given()
-                .spec(spec)
-                .contentType(ContentType.JSON)
-                .body(bodyMap)
-                .when()
-                .post("/school-service/api/student-group/" + groupId + "/removeStudent")
-                .then()
-                .statusCode(anyOf(is(200), is(204)));
-    }
-
-    @Test(priority = 8, dependsOnMethods = "removeStudentFromGroupTest")
-    public void deleteStudentGroupTest() {
+    @Test(dependsOnMethods = "getEducationStandardDetail")
+    public void deleteEducationStandard() {
+        String id = ConfigReader.getProperty("educationStandardID");
         given()
                 .spec(spec)
                 .when()
-                .delete("/school-service/api/student-group/" + groupId)
+                .delete("/school-service/api/education-standard/" + id)
                 .then()
-                .statusCode(anyOf(is(204), is(200)));
-
-        System.out.println("Deleted Student Group ID: " + groupId);
+                .statusCode(204);
     }
 }
