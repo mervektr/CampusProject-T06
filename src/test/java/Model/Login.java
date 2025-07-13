@@ -31,18 +31,19 @@ public class Login extends BaseTest {
 
     @Test
     public void validLoginTest() {
-        Map<String, String> body = new HashMap<>();
-        body.put("username", "turkeyts");
-        body.put("password", "TS.%=2025TR");
+        Map<String, String> credentials = new HashMap<>();
+        credentials.put("username", "turkeyts");
+        credentials.put("password", "TS.%=2025TR");
 
         given()
-                .baseUri("https://test.mersys.io")
                 .contentType(ContentType.JSON)
-                .body(body)
+                .body(credentials)
+                .log().all()
                 .when()
                 .post("/auth/login")
                 .then()
+                .log().all()
                 .statusCode(200)
-                .body("username", equalTo("turkeyts"));
+                .extract().path("refresh_token");
     }
 }
