@@ -21,7 +21,7 @@ public class EducationStandard extends BaseTest {
         Map<String, Object> bodyMap = new HashMap<>();
         bodyMap.put("schoolId", schoolId);
 
-given()
+        given()
                 .spec(spec)
                 .contentType(ContentType.JSON)
                 .body(bodyMap)
@@ -39,7 +39,7 @@ given()
     public void listEducationStandardTest() {
         String hardCodedId = "685ade3f5fe593ee903fb4dd";
 
- given()
+        given()
                 .spec(spec)
                 .log().all()
                 .when()
@@ -61,7 +61,7 @@ given()
         bodyMap.put("calculationMode", "MEAN");
         bodyMap.put("parentStandardCalculationStrategy", "TURN_OFF");
         bodyMap.put("numberOfScores", 7);
-        bodyMap.put("scoreWeights", Arrays.asList(1,1,1,1,1,1,2));
+        bodyMap.put("scoreWeights", Arrays.asList(1, 1, 1, 1, 1, 1, 2));
         bodyMap.put("tenantId", "646cb816433c0f46e7d44cb0");
 
         given()

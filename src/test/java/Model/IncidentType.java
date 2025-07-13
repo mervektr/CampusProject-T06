@@ -1,5 +1,6 @@
 package Model;
 
+import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import org.testng.annotations.Test;
 
@@ -10,7 +11,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 public class IncidentType extends BaseTest{
-
+    Faker faker= new Faker();
     String tenantId = "646cb816433c0f46e7d44cb0";
     String schoolId = "6576fd8f8af7ce488ac69b89";
     String incidentTypeId;
@@ -36,7 +37,8 @@ public class IncidentType extends BaseTest{
     @Test(priority = 2)
     public void addIncidentType() {
         Map<String, Object> body = new HashMap<>();
-        body.put("name", "Yeni Olay Tipi");
+        String incidentName= faker.lorem().paragraph();
+        body.put("name",incidentName);
         body.put("minPoint", 1);
         body.put("maxPoint", 10);
         body.put("tenantId", tenantId);
@@ -58,8 +60,9 @@ public class IncidentType extends BaseTest{
     @Test(priority = 3, dependsOnMethods = "addIncidentType")
     public void editIncidentType() {
         Map<String, Object> body = new HashMap<>();
+        String incidentUpdated= "İncident Updated" + faker.lorem().paragraph();
         body.put("id", incidentTypeId);
-        body.put("name", "Güncellenmiş Olay Tipi");
+        body.put("name", incidentUpdated);
         body.put("active", true);
         body.put("tenantId", tenantId);
         body.put("minPoint", 2);
@@ -77,7 +80,7 @@ public class IncidentType extends BaseTest{
                 .put("/school-service/api/incident-type")
                 .then()
                 .statusCode(200)
-                .body("name", equalTo("Güncellenmiş Olay Tipi"))
+                .body("name", equalTo(incidentUpdated))
                 .body("minPoint", equalTo(2))
                 .body("maxPoint", equalTo(15));
     }

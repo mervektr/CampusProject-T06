@@ -1,5 +1,6 @@
 package Model;
 
+import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import org.testng.annotations.Test;
 
@@ -10,17 +11,21 @@ import static org.hamcrest.Matchers.*;
 
 public class City extends BaseTest {
     String cityId;
+    Faker faker= new Faker();
 
     @Test(priority = 1)
     public void addCityTest() {
+        String cityName=faker.address().cityName();
+
         Map<String, Object> stateMap = new HashMap<>();
         stateMap.put("id", "68611dc114d596fc94c1a507");
 
         Map<String, Object> countryMap = new HashMap<>();
         countryMap.put("id", "6851afe5ca9f665c0c659eec");
 
+
         Map<String, Object> cityMap = new HashMap<>();
-        cityMap.put("name", "NewCityName");
+        cityMap.put("name", cityName);
         cityMap.put("translateName", Collections.emptyList());
         cityMap.put("state", stateMap);
         cityMap.put("country", countryMap);
@@ -35,7 +40,7 @@ public class City extends BaseTest {
                         .then()
                         .statusCode(201)
                         .body("id", notNullValue())
-                        .body("name", equalTo("NewCityName"))
+                        .body("name", equalTo(cityName))
                         .extract().path("id");
 
         System.out.println("Created cityId: " + cityId);
